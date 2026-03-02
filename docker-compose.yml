@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  proxy:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./db:/app/db
+      - ./.env:/app/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: always
+
+networks:
+  default:
+    name: prompt_optimizer_net
