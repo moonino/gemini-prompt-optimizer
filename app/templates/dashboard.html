@@ -1,130 +1,402 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Prompt Optimizer Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.4);
+            --secondary: #a855f7;
             --bg: #0f172a;
-            --card: #1e293b;
+            --card: rgba(30, 41, 59, 0.7);
             --text: #f8fafc;
-            --success: #22c55e;
+            --success: #10b981;
+            --danger: #f43f5e;
+            --border: rgba(255, 255, 255, 0.1);
         }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg);
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a);
             color: var(--text);
             margin: 0;
-            padding: 40px;
+            padding: 20px;
+            min-height: 100vh;
         }
+
         .container {
-            max-width: 1000px;
+            max-width: 1200px;
             margin: 0 auto;
+            animation: fadeIn 0.8s ease-out;
         }
-        h1 { font-weight: 700; margin-bottom: 30px; }
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             margin-bottom: 40px;
         }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .status-badge {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 8px 16px;
+            border-radius: 99px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                opacity: 0.6;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.6;
+            }
+        }
+
+        .grid-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 30px;
+        }
+
         .card {
             background: var(--card);
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            padding: 28px;
+            border-radius: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .card h3 { color: #94a3b8; font-size: 0.875rem; margin: 0 0 10px 0; }
-        .card .value { font-size: 2rem; font-weight: 700; }
-        .card .unit { font-size: 1rem; color: #94a3b8; margin-left: 4px; }
-        .savings { color: var(--success); }
-        
+
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(99, 102, 241, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-title {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 12px;
+            display: block;
+        }
+
+        .card-value {
+            font-size: 2.4rem;
+            font-weight: 700;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .card-unit {
+            font-size: 1.1rem;
+            color: #64748b;
+            font-weight: 400;
+        }
+
+        .card-footer {
+            margin-top: 15px;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .savings-color {
+            color: var(--success);
+        }
+
+        .usd-color {
+            color: #38bdf8;
+        }
+
+        .charts-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 30px;
+            height: 350px;
+            /* 고정 높이 추가하여 무한 팽창 방지 */
+        }
+
+        .card canvas {
+            max-height: 280px;
+            /* 캔버스 최대 높이 제한 */
+        }
+
+        @media (max-width: 900px) {
+            .charts-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .table-container {
+            background: var(--card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            background: var(--card);
-            border-radius: 12px;
-            overflow: hidden;
         }
-        th, td {
-            padding: 16px;
+
+        th {
+            background: rgba(255, 255, 255, 0.03);
             text-align: left;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 20px;
+            color: #94a3b8;
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
         }
-        th { background: rgba(255,255,255,0.05); color: #94a3b8; font-weight: 600; }
+
+        td {
+            padding: 18px 20px;
+            border-top: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        .model-badge {
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
         .progress-bar {
-            height: 8px;
-            background: #334155;
-            border-radius: 4px;
-            margin-top: 20px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 5px;
+            margin-top: 8px;
             overflow: hidden;
         }
+
         .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #6366f1, #a855f7);
-            width: {{ avg_savings }}%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 5px;
+
+            width: {
+                    {
+                    avg_savings
+                }
+            }
+
+            %;
+            box-shadow: 0 0 15px var(--primary-glow);
         }
     </style>
 </head>
+
 <body>
     <div class="container">
-        <h1>📊 Prompt Optimizer <span style="font-weight: 400; opacity: 0.6;">Insights</span></h1>
-        
-        <div class="grid">
+        <header>
+            <h1>Prompt Optimizer Proxy Dashboard</h1>
+            <div class="status-badge">
+                <div class="status-dot"></div>
+                SYSTEM ACTIVE
+            </div>
+        </header>
+
+        <div class="grid-stats">
             <div class="card">
-                <h3>누적 원본 토큰</h3>
-                <div class="value">{{ stats.total_original or 0 }}<span class="unit">tokens</span></div>
+                <span class="card-title">누적 절감 토큰</span>
+                <div class="card-value savings-color">{{ stats.total_savings or 0 }}<span
+                        class="card-unit">tokens</span></div>
+                <div class="card-footer">전체 토큰의 <b>{{ avg_savings }}%</b>를 절약했습니다.</div>
             </div>
             <div class="card">
-                <h3>누적 압축 토큰</h3>
-                <div class="value">{{ stats.total_compressed or 0 }}<span class="unit">tokens</span></div>
+                <span class="card-title">추정 누적 절약액</span>
+                <div class="card-value usd-color">$ {{ "%.4f"|format(stats.total_savings_usd or 0) }}</div>
+                <div class="card-footer">Gemini 실시간 요금 기준 (USD)</div>
             </div>
             <div class="card">
-                <h3>평균 절감률</h3>
-                <div class="value savings">{{ avg_savings }}%</div>
-                <div class="progress-bar"><div class="progress-fill"></div></div>
-            </div>
-            <div class="card">
-                <h3>누적 절약 금액 (추정)</h3>
-                <div class="value">$ {{ "%.2f"|format((stats.total_savings or 0) / 1000000 * 5) }}</div>
-                <p style="font-size: 0.75rem; color: #64748b; margin: 8px 0 0 0;">* GPT-4o $5/1M tokens 기준</p>
+                <span class="card-title">실시간 절감률</span>
+                <div class="card-value" style="color: var(--secondary);">{{ avg_savings }}%</div>
+                <div class="progress-bar">
+                    <div class="progress-fill"></div>
+                </div>
             </div>
         </div>
 
-        <h2>최근 최적화 로그</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>시간</th>
-                    <th>모델</th>
-                    <th>원본</th>
-                    <th>압축</th>
-                    <th>절감액</th>
-                    <th>절감률</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for log in logs %}
-                <tr>
-                    <td>{{ log.timestamp.strftime('%H:%M:%S') }}</td>
-                    <td>{{ log.model }}</td>
-                    <td>{{ log.original_tokens }}</td>
-                    <td>{{ log.compressed_tokens }}</td>
-                    <td>{{ log.savings_tokens }}</td>
-                    <td>{{ "%.1f"|format(log.savings_percent) }}%</td>
-                </tr>
-                {% endfor %}
-                {% if not logs %}
-                <tr>
-                    <td colspan="6" style="text-align: center; color: #64748b; padding: 40px;">데이터가 없습니다. API 요청을 시작해 보세요.</td>
-                </tr>
-                {% endif %}
-            </tbody>
-        </table>
+        <div class="charts-container">
+            <div class="card">
+                <span class="card-title">Token Savings Trend (Last 20)</span>
+                <canvas id="savingsTrendChart" height="280"></canvas>
+            </div>
+            <div class="card">
+                <span class="card-title">Model Distribution</span>
+                <canvas id="modelDistChart" height="280"></canvas>
+            </div>
+        </div>
+
+        <h2 style="font-size: 1.5rem; margin-bottom: 20px;">최근 최적화 내역</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>시간</th>
+                        <th>모델</th>
+                        <th>원본 토큰</th>
+                        <th>압축 토큰</th>
+                        <th>절감 비율</th>
+                        <th>절감 금액</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr>
+                        <td>{{ log.timestamp.strftime('%H:%M:%S') }}</td>
+                        <td><span class="model-badge">{{ log.model }}</span></td>
+                        <td>{{ log.original_tokens }}</td>
+                        <td>{{ log.compressed_tokens }}</td>
+                        <td class="savings-color">+{{ "%.1f"|format(log.savings_percent) }}%</td>
+                        <td class="usd-color">$ {{ "%.5f"|format(log.savings_usd or 0) }}</td>
+                    </tr>
+                    {% endfor %}
+                    {% if not logs %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; color: #64748b; padding: 60px;">데이터가 없습니다. API 요청을
+                            시작해 보세요.</td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
     </div>
+
+    <script>
+        // Chart.js Default Config
+        Chart.defaults.color = '#94a3b8';
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+
+        // Savings Trend Chart
+        const trendCtx = document.getElementById('savingsTrendChart').getContext('2d');
+        new Chart(trendCtx, {
+            type: 'line',
+            data: {
+                labels: {{ trend_labels | tojson }},
+            datasets: [
+            {
+                label: 'Original Tokens',
+                data: {{ trend_original | tojson }},
+            borderColor: '#64748b',
+            backgroundColor: 'rgba(100, 116, 139, 0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2,
+            pointRadius: 0
+                    },
+            {
+                label: 'Compressed Tokens',
+                data: {{ trend_compressed | tojson }},
+            borderColor: '#6366f1',
+            backgroundColor: 'rgba(99, 102, 241, 0.2)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 3,
+            pointRadius: 4,
+            pointBackgroundColor: '#6366f1'
+                    }
+        ]
+            },
+            options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'top', align: 'end' }
+            },
+            scales: {
+                y: { grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+                x: { grid: { display: false } }
+            }
+        }
+        });
+
+        // Model Distribution Chart
+        const distCtx = document.getElementById('modelDistChart').getContext('2d');
+        const modelDistData = {{ model_dist | tojson }};
+        new Chart(distCtx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.keys(modelDistData),
+                datasets: [{
+                    data: Object.values(modelDistData),
+                    backgroundColor: [
+                        '#6366f1', '#a855f7', '#ec4899', '#f43f5e', '#f97316'
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '70%',
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    </script>
 </body>
+
 </html>

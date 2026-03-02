@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-download NLTK data so it does not download on every container start
+RUN python -m nltk.downloader punkt punkt_tab stopwords
+
 # Copy application code
 COPY . .
 

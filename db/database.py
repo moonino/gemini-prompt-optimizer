@@ -19,6 +19,7 @@ class TokenUsage(Base):
     savings_tokens = Column(Integer)
     savings_percent = Column(Float)
     model = Column(String)
+    savings_usd = Column(Float, default=0.0)
 
 def init_db():
     Base.metadata.create_all(bind=engine)

@@ -1,0 +1,8 @@
+fastapi
+uvicorn
+pydantic-settings
+aiohttp
+jinja2
+python-multipart
+nltk
+networkx

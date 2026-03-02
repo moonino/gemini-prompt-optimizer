@@ -6,3 +6,5 @@ __pycache__/
 db/usage.db
 /app/templates/*.html
 !/app/templates/dashboard.html
+
+prompt_proxy.db
