@@ -1,4 +1,4 @@
-# Lightweight Prompt Optimizer 🔥 (Gemini Native Edition)
+# 💎 Gemini Prompt Optimizer
 
 [![Python Support](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100%2B-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
@@ -7,7 +7,7 @@
 
 > **"API 요금을 반토막 내는 가장 쉬운 방법"**
 >
-> 기존 Gemini API 호출 코드에서 URL 단 **한 줄만 변경**하세요. 로컬 프록시가 무거운 딥러닝 없이 초경량 NLP 엔진으로 프롬프트를 압축하여 전달합니다.
+> 기존 Gemini API 호출 코드에서 접속 주소(URL) 단 **한 줄만 추가**하세요. 로컬 프록시가 무거운 딥러닝 없이 초경량 NLP 엔진으로 프롬프트를 압축하여 전달합니다.
 
 ---
 
@@ -54,43 +54,63 @@ AI 서비스를 기획하거나 RAG(Retrieval-Augmented Generation) 시스템을
 
 ## 🚀 빠른 시작
 
-### 1단계: API 키 설정
-`.env.example`을 복사하여 `.env` 파일을 만들고 Gemini API 키를 넣습니다.
+### 1단계: 프로젝트 다운로드 (Clone)
+터미널을 열고 코드를 다운로드 받은 후 폴더 안으로 들어갑니다.
+```bash
+git clone https://github.com/moonino/gemini-prompt-optimizer.git
+cd gemini-prompt-optimizer
+```
+
+### 2단계: API 키 설정
+`.env.example` 파일을 복사하여 `.env` 파일을 만들고 Gemini API 키를 넣습니다.
 ```bash
 cp .env.example .env
 
-# .env 파일 내부
+# .env 파일을 열고 API 키를 입력하세요
 GEMINI_API_KEY="AI Studio에서 발급받은 실제 API 키 입력"
 COMPRESSION_ENABLED=True
 COMPRESSION_RATE=0.5 # 50% 압축
 ```
 
-### 2단계: 서버 실행 (Docker 추천 🐳)
-파이썬 환경 충돌 스트레스 없이 딱 한 줄로 실행하세요.
+### 3단계: 서버 실행 (Docker 추천 🐳)
+파이썬 환경 충돌 스트레스 없이 터미널에 딱 한 줄만 입력하여 실행하세요.
 ```bash
 docker-compose up -d
 ```
-*(백그라운드에서 조용히 실행되며 `localhost:8000`을 점유합니다.)*
+*(백그라운드에서 조용히 실행되며 `localhost:8000` 주소를 사용하게 됩니다.)*
 
 ---
 
-## 💻 사용 방법 (Drop-in Replacement)
+## 💻 내 프로젝트에 적용하는 방법 (Drop-in Replacement)
 
-서버가 켜졌다면, 여러분의 기존 코드에서 **엔드포인트(URL)만** 바꿔주시면 됩니다!
+서버(프록시)가 성공적으로 켜졌다면, **여러분들이 기존에 개발해둔 AI 채팅/RAG 프로젝트 코드를 뜯어고칠 필요가 전혀 없습니다!** 
+오직 구글로 향하던 API **주소(Endpoint URL) 설정 한 줄**만 저희 프록시(`http://localhost:8000/v1`)로 방향을 틀어주면 끝납니다.
 
-### � Python (Google GenAI SDK)
+### 🐍 Python (Google GenAI SDK) 연동 예시
+
 ```python
 import google.generativeai as genai
+
+# -----------------------------------------------------------------
+# ❌ 기존 나의 원본 코드 (단순 API 키만 연동된 상태)
+# -----------------------------------------------------------------
+# genai.configure(api_key="유효한_제미나이_키")
+
+
+# -----------------------------------------------------------------
+# ✅ [적용 후] 딱 2줄만 추가된 코드
+# -----------------------------------------------------------------
 from google.api_core.client_options import ClientOptions
 
-# 단 한줄의 설정 변경으로 프록시 우회
+# 통신 방향을 구글 메인 서버가 아닌, 내 로컬 프록시 서버로 돌립니다.
 genai.configure(
     api_key="유효한_제미나이_키", 
-    client_options=ClientOptions(api_endpoint="http://localhost:8000/v1")
+    client_options=ClientOptions(api_endpoint="http://localhost:8000/v1") # ✨ 핵심: 이 줄 하나만 추가!
 )
 
+# 👇 아래부터는 여러분의 비즈니스 로직입니다. 단 1글자도 수정할 필요가 없습니다!
 model = genai.GenerativeModel('gemini-2.5-flash')
-response = model.generate_content("여기 매우 긴 PDF나 책 내용을 붙여넣어보세요...")
+response = model.generate_content("여기에 매우 긴 PDF 요약본이나 RAG 프롬프트를 넣습니다...")
 print(response.text)
 ```
 
